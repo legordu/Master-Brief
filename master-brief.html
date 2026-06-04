@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Master Brief</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface2: #1c1c1c;
+  --border: #2c2c2c;
+  --accent: #b85c2a;
+  --accent2: #d4784a;
+  --accentglow: rgba(184,92,42,0.12);
+  --text: #ede8e0;
+  --muted: #6a6460;
+  --muted2: #3a3430;
+  --success: #4a9e5c;
+  --rec: #c83a3a;
+  --gold: #c0963c;
+  --gold2: #e0b85c;
+}
+html, body { height: 100%; overflow: hidden; touch-action: manipulation; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; }
+
+.screen { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+.screen.active { display: flex; }
+
+/* ── PIN ── */
+#pin-screen {
+  align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 20%, #1a0e06 0%, var(--bg) 65%);
+  padding: 24px; gap: 0;
+}
+.pin-eyebrow { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; font-weight: 500; }
+.pin-title { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 600; text-align: center; margin-bottom: 6px; }
+.pin-sub { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 28px; font-weight: 300; }
+.pin-dots { display: flex; gap: 18px; margin-bottom: 28px; }
+.pin-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); background: transparent; transition: all 0.18s; }
+.pin-dot.filled { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 12px var(--accentglow); }
+.pin-dot.error { background: var(--rec); border-color: var(--rec); animation: shake 0.4s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+.pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; max-width: 300px; margin-bottom: 18px; }
+.pin-key {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px;
+  height: 76px; font-size: 26px; font-weight: 400; color: var(--text);
+  cursor: pointer; transition: all 0.1s; -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: center; justify-content: center; font-family: 'DM Sans', sans-serif;
+}
+.pin-key:active { background: var(--accent); border-color: var(--accent); transform: scale(0.93); }
+.pin-key.sym { font-size: 18px; color: var(--muted); }
+.pin-key.zero { grid-column: 2; }
+.pin-voice-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: transparent; border: 1px solid var(--border); border-radius: 24px;
+  padding: 11px 22px; color: var(--muted); font-size: 13px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all 0.2s; margin-top: 4px;
+}
+.pin-voice-btn.listening { border-color: var(--accent); color: var(--accent2); }
+.pin-note { font-size: 11px; color: var(--muted2); text-align: center; margin-top: 14px; max-width: 260px; line-height: 1.7; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 18px; border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0; gap: 8px;
+}
+.topbar-left { display: flex; flex-direction: column; gap: 1px; }
+.topbar-brand { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 600; color: var(--accent2); }
+.topbar-world { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.topbar-progress { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.topbar-lock { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 5px 11px; color: var(--muted); font-size: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+.topbar-lock:hover { border-color: var(--accent); color: var(--accent); }
+.progress-strip { height: 2px; background: var(--border); flex-shrink: 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--gold)); transition: width 0.5s ease; }
+
+/* ── QUESTION AREA ── */
+.question-area {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 18px 22px 10px; text-align: center; overflow: hidden;
+}
+.q-number { font-size: 11px; color: var(--muted); margin-bottom: 8px; letter-spacing: 1px; }
+.q-text { font-family: 'Cormorant Garamond', serif; font-size: clamp(19px, 4.2vw, 28px); font-weight: 600; line-height: 1.35; max-width: 600px; margin-bottom: 10px; }
+.q-hint { font-size: 12px; color: var(--muted); font-weight: 300; margin-bottom: 12px; max-width: 480px; line-height: 1.6; font-style: italic; }
+.q-answer-box {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 14px;
+  padding: 13px 16px; font-size: 13px; color: var(--muted);
+  max-width: 580px; width: 100%; min-height: 54px; max-height: 100px;
+  overflow-y: auto; text-align: left; line-height: 1.65; font-style: italic; transition: all 0.2s;
+}
+.q-answer-box.filled { color: var(--text); font-style: normal; border-color: #2a4a2a; background: #0e1a0e; }
+.q-answer-box.recording-live { border-color: var(--rec); background: #1a0e0e; }
+.q-status { font-size: 11px; color: var(--success); margin-top: 7px; min-height: 16px; display: flex; align-items: center; gap: 5px; }
+.q-status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--success); }
+.interim-area { font-size: 12px; color: var(--accent2); font-style: italic; min-height: 18px; margin-top: 5px; max-width: 540px; text-align: center; }
+
+/* ── MIC AREA ── */
+.mic-area {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center;
+  padding: 10px 18px 18px; border-top: 1px solid var(--border);
+  background: var(--surface); gap: 10px;
+}
+.read-q-btn {
+  width: 100%; max-width: 340px; background: var(--surface2);
+  border: 1.5px solid var(--accent); border-radius: 28px; padding: 12px 24px;
+  color: var(--accent2); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+  cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.18s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.read-q-btn:active { background: var(--accent); color: white; }
+.mic-ring {
+  width: 110px; height: 110px; border-radius: 50%; background: var(--surface2);
+  border: 2px solid var(--border); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s; position: relative; -webkit-tap-highlight-color: transparent;
+}
+.mic-ring.recording { background: var(--rec); border-color: var(--rec); animation: micPulse 1.2s ease-in-out infinite; }
+.mic-ring.thinking { background: #1a1408; border-color: var(--gold); animation: thinkPulse 1.5s ease-in-out infinite; }
+@keyframes micPulse { 0%,100%{box-shadow:0 0 0 0 rgba(200,58,58,0.5)} 50%{box-shadow:0 0 0 18px rgba(200,58,58,0)} }
+@keyframes thinkPulse { 0%,100%{box-shadow:0 0 0 0 rgba(192,150,60,0.4)} 50%{box-shadow:0 0 0 16px rgba(192,150,60,0)} }
+@keyframes pulse2 { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+.mic-label { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; }
+.mic-label.recording { color: var(--rec); font-weight: 600; }
+.mic-label.thinking { color: var(--gold2); font-weight: 500; }
+.nav-row { display: flex; gap: 8px; width: 100%; max-width: 380px; }
+.nav-btn {
+  flex: 1; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 15px 8px; color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500; cursor: pointer; text-align: center;
+  transition: all 0.15s; -webkit-tap-highlight-color: transparent; line-height: 1.3;
+}
+.nav-btn:active { transform: scale(0.96); }
+.nav-btn.accent { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
+.nav-btn.gold { background: var(--gold); border-color: var(--gold); color: #1a1000; font-weight: 600; }
+.nav-btn.sm { font-size: 12px; color: var(--muted); padding: 13px 8px; }
+
+/* ── WORLD MAP ── */
+#worldmap-screen { background: var(--bg); }
+.wm-header { padding: 16px 18px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+.wm-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; }
+.wm-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.wm-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 9px; }
+.world-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 13px 15px; display: flex; align-items: center; gap: 13px;
+  cursor: pointer; transition: all 0.18s; -webkit-tap-highlight-color: transparent;
+}
+.world-card:active { transform: scale(0.98); }
+.world-card.current { border-color: var(--accent); background: var(--accentglow); }
+.world-card.complete { border-color: #2a4a2a; }
+.world-emoji { font-size: 24px; flex-shrink: 0; width: 36px; text-align: center; }
+.world-info { flex: 1; min-width: 0; }
+.world-name { font-size: 14px; font-weight: 500; }
+.world-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.world-count { font-size: 11px; color: var(--success); margin-top: 2px; }
+.world-pct { font-size: 11px; color: var(--muted); text-align: right; flex-shrink: 0; }
+.wm-footer { padding: 13px 15px; border-top: 1px solid var(--border); background: var(--surface); display: flex; gap: 9px; flex-shrink: 0; }
+.wm-btn { flex: 1; padding: 14px; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; border: none; transition: all 0.15s; }
+.wm-btn.primary { background: var(--accent); color: white; }
+.wm-btn.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+/* ── REVIEW ── */
+#review-screen { background: var(--bg); }
+.review-header { padding: 14px 16px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
+.review-back { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 7px 13px; color: var(--muted); font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; flex-shrink: 0; }
+.review-title { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 600; }
+.reading-indicator { font-size: 11px; color: var(--accent2); display: none; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
+.reading-indicator.show { display: flex; }
+.ri-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); animation: pulse2 1s ease-in-out infinite; }
+.review-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.review-world-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); font-weight: 500; margin-top: 6px; padding-left: 2px; }
+.review-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 13px 15px; transition: border-color 0.3s; }
+.review-item.reading-now { border-color: var(--accent2); }
+.review-q { font-size: 12px; color: var(--muted); margin-bottom: 6px; line-height: 1.5; }
+.review-a { font-size: 13px; line-height: 1.65; }
+.review-empty { font-size: 12px; color: var(--muted2); font-style: italic; }
+.review-footer { padding: 12px 14px; border-top: 1px solid var(--border); background: var(--surface); display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.rev-btn { flex: 1; min-width: 80px; padding: 13px 8px; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; text-align: center; border: none; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+.rev-btn.primary { background: var(--accent); color: white; }
+.rev-btn.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.rev-btn.gold { background: var(--gold); color: #1a1000; }
+.rev-btn.red { background: var(--rec); color: white; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--success); color: white; padding: 10px 22px; border-radius: 24px; font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.28s; pointer-events: none; white-space: nowrap; z-index: 999; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: var(--rec); }
+.toast.info { background: #1e3a5a; }
+.toast.gold { background: var(--gold); color: #1a1000; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- PIN -->
+<div class="screen active" id="pin-screen">
+  <div class="pin-eyebrow">Master Brief</div>
+  <div class="pin-title" id="pinTitle">Welcome Back</div>
+  <div class="pin-sub" id="pinSub">Enter your 4-digit PIN</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-keypad">
+    <div class="pin-key" onclick="pinTap('1')">1</div><div class="pin-key" onclick="pinTap('2')">2</div><div class="pin-key" onclick="pinTap('3')">3</div>
+    <div class="pin-key" onclick="pinTap('4')">4</div><div class="pin-key" onclick="pinTap('5')">5</div><div class="pin-key" onclick="pinTap('6')">6</div>
+    <div class="pin-key" onclick="pinTap('7')">7</div><div class="pin-key" onclick="pinTap('8')">8</div><div class="pin-key" onclick="pinTap('9')">9</div>
+    <div class="pin-key sym" onclick="pinDel()">⌫</div><div class="pin-key zero" onclick="pinTap('0')">0</div><div class="pin-key sym" onclick="pinClear()">✕</div>
+  </div>
+  <button class="pin-voice-btn" id="pinVoiceBtn" onclick="pinVoice()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm6 9a1 1 0 0 1 1 1 7 7 0 0 1-6 6.92V20h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-2.08A7 7 0 0 1 5 11a1 1 0 0 1 2 0 5 5 0 0 0 10 0 1 1 0 0 1 1-1z"/></svg>
+    Say your PIN aloud
+  </button>
+  <div class="pin-note" id="pinNote"></div>
+</div>
+
+<!-- MAIN -->
+<div class="screen" id="main-screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-brand">Master Brief</div>
+      <div class="topbar-world" id="topbarWorld"></div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-progress" id="topbarProgress">0 / 0</div>
+      <button class="topbar-lock" onclick="lockApp()">Lock</button>
+    </div>
+  </div>
+  <div class="progress-strip"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="question-area">
+    <div class="q-number" id="qNumber"></div>
+    <div class="q-text" id="qText">Loading...</div>
+    <div class="q-hint" id="qHint"></div>
+    <div class="q-answer-box" id="qAnswerBox">No answer yet — tap the mic to speak.</div>
+    <div class="interim-area" id="interimArea"></div>
+    <div class="q-status" id="qStatus"></div>
+  </div>
+  <div class="mic-area">
+    <button class="read-q-btn" onclick="repeatQuestion()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+      Read Question Aloud
+    </button>
+    <div class="mic-ring" id="micRing" onclick="toggleRecord()">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="white"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm6 9a1 1 0 0 1 1 1 7 7 0 0 1-6 6.92V20h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-2.08A7 7 0 0 1 5 11a1 1 0 0 1 2 0 5 5 0 0 0 10 0 1 1 0 0 1 1-1z"/></svg>
+    </div>
+    <div class="mic-label" id="micLabel">Tap to answer</div>
+    <div id="micStatus" style="font-size:11px;color:var(--muted);text-align:center;min-height:14px;margin-top:-4px"></div>
+    <div class="nav-row">
+      <button class="nav-btn sm" onclick="prevQuestion()">← Back</button>
+      <button class="nav-btn sm" onclick="repeatQuestion()">Repeat ↺</button>
+      <button class="nav-btn sm" onclick="skipQuestion()">Skip →</button>
+    </div>
+    <div class="nav-row">
+      <button class="nav-btn sm" onclick="showWorldMap()">🗺 Worlds</button>
+      <button class="nav-btn sm" onclick="showReview()">📋 Review</button>
+      <button class="nav-btn accent" onclick="generateBrief()">Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- WORLD MAP -->
+<div class="screen" id="worldmap-screen">
+  <div class="wm-header">
+    <div class="wm-title">Your Worlds</div>
+    <div class="wm-sub">Tap any world to jump directly to its first question</div>
+  </div>
+  <div class="wm-body" id="wmBody"></div>
+  <div class="wm-footer">
+    <button class="wm-btn secondary" onclick="showMain()">← Back</button>
+    <button class="wm-btn primary" onclick="speakWorldSummary()">🔊 Read Summary</button>
+  </div>
+</div>
+
+<!-- REVIEW -->
+<div class="screen" id="review-screen">
+  <div class="review-header">
+    <button class="review-back" onclick="reviewBack()">← Back</button>
+    <div class="review-title">Your Full Brief</div>
+    <div class="reading-indicator" id="readingIndicator"><div class="ri-dot"></div> Reading...</div>
+  </div>
+  <div class="review-body" id="reviewBody"></div>
+  <div class="review-footer">
+    <button class="rev-btn secondary" id="readAloudBtn" onclick="speakReview()">🔊 Read</button>
+    <button class="rev-btn red" id="pauseReadBtn" onclick="pauseReading()" style="display:none">⏸ Pause</button>
+    <button class="rev-btn gold" id="resumeReadBtn" onclick="resumeReading()" style="display:none">▶ Resume</button>
+    <button class="rev-btn gold" onclick="speakUnanswered()">Unanswered</button>
+    <button class="rev-btn primary" onclick="generateBrief()">Generate</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// WORLDS & QUESTIONS
+// ════════════════════════════════════════════════════════════
+const WORLDS = [
+  {
+    id: 'identity', name: 'Who You Are', emoji: '🌟',
+    desc: 'The person at the center of every world',
+    questions: [
+      { id:'id1', q:'Describe yourself in your own words — not a title, not a role. Who are you at your core?', hint:'Speak as if no one is watching. Raw is better than polished.' },
+      { id:'id2', q:'You are an immigrant. What country did you come from, what did you leave behind, and what drove you to leave?', hint:'The origin — what it cost and what it gave you.' },
+      { id:'id3', q:'What did the experience of immigrating teach you about yourself that nothing else could have?', hint:'The transformation only that journey could create.' },
+      { id:'id4', q:'How do you see and move through the world differently than the people around you?', hint:'Your mindset, your values, how you see opportunity where others see nothing.' },
+      { id:'id5', q:'What are you afraid people will misunderstand about you if you build a very public platform?', hint:'The vulnerability beneath the ambition.' },
+      { id:'id6', q:'If someone followed your life for a full year and watched everything — what would they say you stand for?', hint:'Your unspoken brand, in someone else\'s words.' }
+    ]
+  },
+  {
+    id: 'cats', name: 'Cats & Garden Life', emoji: '🐾',
+    desc: 'The primary content universe and main revenue driver',
+    questions: [
+      { id:'ca1', q:'Tell me about your cats. How many, what are their names, their personalities, and what role do they play in your daily life?', hint:'The individuals — not just "my cats." Who are they?' },
+      { id:'ca2', q:'Describe what a typical day looks like living with your cats in the estate and garden. What does that life look and feel like?', hint:'The content is in the detail — the morning routines, the chaos, the quiet moments.' },
+      { id:'ca3', q:'What draws you to cats specifically, in a way that goes beyond just having pets?', hint:'The deeper pull — the connection, what they give you, what you feel responsible for.' },
+      { id:'ca4', q:'You want to do Trap, Spay, Neuter and Release work for cats in Paraguay. Tell me what is happening there and why it worries you.', hint:'Not a personal crusade — a genuine concern. What did you learn, what did you see?' },
+      { id:'ca5', q:'How do you see the TNR work connecting to your content and income — not as a charity ask, but as a cause your platform funds?', hint:'The model: earn through lifestyle content, direct a portion to the cats. How does that story get told?' },
+      { id:'ca6', q:'What kind of cat and garden content feels most natural to you — documentary, day-in-the-life, educational, purely visual?', hint:'The format that fits who you are and how you live.' }
+    ]
+  },
+  {
+    id: 'estate', name: 'The Estate', emoji: '🏡',
+    desc: 'The property, the architecture, the renovation journey',
+    questions: [
+      { id:'es1', q:'Describe the estate in full. Where is it, what does it look like, what first drew you to it?', hint:'The architecture, the land, the river, the feeling when you first walked in.' },
+      { id:'es2', q:'The estate has Japanese-inspired architecture and sits on a river with three acres of garden. What does that specific combination mean to you personally?', hint:'Not just beautiful — why does this particular aesthetic and setting resonate with who you are?' },
+      { id:'es3', q:'The estate belonged to a master gardener. What do you know about her, and what does it mean to you to have bought her property?', hint:'The legacy you inherited — the weight and the honor of it.' },
+      { id:'es4', q:'What is your renovation vision? What needs to change, what must be preserved, and what do you want people to feel when they see the finished result?', hint:'The before, the vision, the intention. Be specific about spaces if you can.' },
+      { id:'es5', q:'How do you want to document the renovation — what gets shown, what stays private, and how do you want brands and designers to be part of the story?', hint:'The content strategy and sponsorship model for the renovation itself.' },
+      { id:'es6', q:'What does owning this estate say about the arc of your life? Connect it to where you came from.', hint:'The immigrant who now owns an estate with a river and three acres. Say that out loud.' }
+    ]
+  },
+  {
+    id: 'garden', name: 'The Garden Legacy', emoji: '🌿',
+    desc: 'Continuing the master gardener\'s work — the land, the seasons, the story',
+    questions: [
+      { id:'ga1', q:'What do you know about the garden as it exists right now — what is planted, what is her design, what has she built over the years?', hint:'The inheritance — what you walked into.' },
+      { id:'ga2', q:'What is your relationship with gardening? Are you learning from scratch, or do you have experience you are bringing to her work?', hint:'Honest starting point — the gap or the foundation.' },
+      { id:'ga3', q:'What do you want to preserve from her garden, and what do you want to add or evolve?', hint:'Honoring the legacy while making it yours.' },
+      { id:'ga4', q:'How do you see the garden as a content universe — seasons changing, plants blooming, the cats in the garden, the Japanese aesthetic?', hint:'The visual world that this garden can become on camera.' },
+      { id:'ga5', q:'Are there garden or plant brands, tools, or partnerships that feel natural to this world?', hint:'The sponsorship landscape for the garden content specifically.' },
+      { id:'ga6', q:'What would it mean to you to keep her legacy alive — not just the plants, but the spirit of what she built?', hint:'The emotional core of this story. This is what makes it compelling content.' }
+    ]
+  },
+  {
+    id: 'travel', name: 'Travel & Luxury', emoji: '✈️',
+    desc: 'Where you go, how you live, the world through your eyes',
+    questions: [
+      { id:'tr1', q:'Describe your relationship with travel. How often, where, and what does it mean to you beyond seeing new places?', hint:'The philosophy and the feeling — not the itinerary.' },
+      { id:'tr2', q:'What does luxury mean to you specifically when you travel? What are your non-negotiables?', hint:'Your standards, your taste, the things you will not compromise on.' },
+      { id:'tr3', q:'What are the destinations that have changed you most, and what did each one give you?', hint:'Not the most beautiful — the most transformative.' },
+      { id:'tr4', q:'How do you see travel content fitting into your platform — and how does the estate become the anchor that the travel stories return to?', hint:'The home base and the adventures. The contrast that makes both more compelling.' },
+      { id:'tr5', q:'What travel experiences do you want to document that no one else is documenting from your specific perspective?', hint:'The immigrant luxury traveler with a Japanese estate and cats. That intersection.' },
+      { id:'tr6', q:'What travel brands, hotels, or experiences feel like natural partners for your platform?', hint:'The sponsorship landscape for travel content.' }
+    ]
+  },
+
+  {
+    id: 'music', name: 'Music & Atmosphere', emoji: '🎹',
+    desc: 'The soundtrack of your life — ambient, cinematic, always present',
+    questions: [
+      { id:'mu1', q:'Describe the role music plays in your home and daily life. What does it feel like to have live piano or organ playing in your space?', hint:'The atmosphere it creates — what guests feel, what you feel, how it shapes the environment.' },
+      { id:'mu2', q:'Your husband is an accomplished pianist and keyboard player. How do you see his music appearing in your content — ambient background, occasional feature, seasonal moments?', hint:'He does not need to be front and center. How does his presence feel most natural and authentic?' },
+      { id:'mu3', q:'The baby grand Steinway in the estate — describe where it sits, how it looks in the space, and what it means to have that in your home.', hint:'The visual, the drama, the story of that piano in that room. This is content.' },
+      { id:'mu4', q:'What instruments are in the house — the Steinway, the B3 organ, the keyboards. How do they live in the space?', hint:'The collection, where things are placed, how they coexist with the Japanese architecture and garden.' },
+      { id:'mu5', q:'Is there a way you see music becoming a content element — not about your husband specifically, but about the atmosphere and lifestyle your home creates?', hint:'The estate with live music drifting through it. The cats near the piano. The garden in the background. That world.' }
+    ]
+  },
+  {
+    id: 'ai', name: 'Building with AI', emoji: '🤖',
+    desc: 'How AI runs the empire — the tools, the workflow, the possible story',
+    questions: [
+      { id:'ai1', q:'How are you currently using AI in your life and work? What tools, what tasks, what has surprised you?', hint:'Your actual experience so far — not the vision yet, the reality.' },
+      { id:'ai2', q:'What does "building with agentic AI" mean to you in practical terms for this platform? What would AI actually do?', hint:'Content creation, scheduling, research, editing, strategy, brand outreach — be specific.' },
+      { id:'ai3', q:'There is a possible content angle here: documenting how you build a media empire solo using AI. How do you feel about making that process visible?', hint:'This is not locked in — just exploring. Does showing the AI workflow feel authentic or too behind the curtain?' },
+      { id:'ai4', q:'What would the AI-built operation need to look like for you to run this at fifty thousand dollars a month mostly by yourself?', hint:'The systems, the team size, the automation, the things only you can do.' },
+      { id:'ai5', q:'What are your boundaries with AI in your content — what do you want to stay human, what are you comfortable letting AI handle?', hint:'Your voice, your story, your relationships — where does the human have to show up?' }
+    ]
+  },
+  {
+    id: 'money', name: 'Money & Empire', emoji: '💰',
+    desc: 'The $50k/month goal, how you get there, and what it funds',
+    questions: [
+      { id:'mn1', q:'Your goal is fifty thousand dollars a month within the first year. Say out loud what that money needs to do — the renovation, the estate, the animals, the travel, the TNR work.', hint:'Make it real and specific. This is your financial north star.' },
+      { id:'mn2', q:'Brand deals are your primary revenue driver — cat, garden, estate, travel content. What kinds of brands feel completely aligned with your worlds?', hint:'Luxury home, garden, pet, travel, design, Japanese aesthetic, renovation — who do you want calling you?' },
+      { id:'mn3', q:'What brands or categories would you never work with no matter the money?', hint:'Your lines. Non-negotiables. What would feel wrong.' },
+      { id:'mn4', q:'You want designers and brands to sponsor the renovation rather than you paying for it. How do you see that working as a content and business model?', hint:'The renovation as a living brand partnership — the story and the deal structure.' },
+      { id:'mn5', q:'Beyond brand deals, what other revenue streams feel natural — digital products, licensing, events, masterclasses on building with AI, estate experiences?', hint:'Not what you have to do — what feels like it fits your life without adding stress.' },
+      { id:'mn6', q:'How do you want to feel about how you make money? What does an aligned income model look and feel like for you?', hint:'The standards, the aesthetic of how you earn — this shapes every deal you take.' }
+    ]
+  },
+  {
+    id: 'platform', name: 'Platform & Voice', emoji: '📱',
+    desc: 'Your audience, your format, your comfort on camera, your creator references',
+    questions: [
+      { id:'pl1', q:'Who is the one person you most want watching everything you create? Paint their full picture.', hint:'Age, life situation, what they are hungry for, why your world would pull them in.' },
+      { id:'pl2', q:'You are not naturally comfortable in front of the camera but willing to adapt. What formats feel most natural — voiceover, behind the lens, narrated documentary, occasional on-camera?', hint:'There is no wrong answer. This shapes the entire production approach.' },
+      { id:'pl3', q:'What platforms feel right for your worlds — Instagram, YouTube, TikTok, a newsletter, a podcast? And which ones feel like a bad fit for who you are?', hint:'Honest instincts. Where do you feel most yourself?' },
+      { id:'pl4', q:'Name every creator or media personality you admire — on any platform. Say the name and one sentence about what they have that you want.', hint:'No judgment. This is research material for Claude, not a blueprint for you.' },
+      { id:'pl5', q:'All your content is recorded at the estate or during travel. How do you see that constraint becoming an asset — the estate as your set, your world, your consistent backdrop?', hint:'The location as brand. What does always being in that environment communicate?' },
+      { id:'pl6', q:'Of all your worlds — cats, estate, garden, travel, music, AI, identity — which one feels like the right door to open first to build your initial audience?', hint:'The anchor that brings people in before they discover everything else.' },
+      { id:'pl7', q:'What is your biggest fear about becoming a public figure with a very large following?', hint:'Be honest. This shapes the safety rails we build into your strategy.' }
+    ]
+  },
+  {
+    id: 'loose', name: 'Loose Thoughts', emoji: '💭',
+    desc: 'Voice memos to consider later — no structure, just capture',
+    questions: [
+      { id:'lo1', q:'Drop anything here. Random ideas, half-formed thoughts, things you want to remember, things to consider later.', hint:'No structure needed. Just talk. Everything goes here.' },
+      { id:'lo2', q:'Any names, people, brands, or connections that came to mind that you want to remember?', hint:'A name, a brand, someone you want to reach out to, a collaboration idea.' },
+      { id:'lo3', q:'Any fears, doubts, or things holding you back that you have not said yet?', hint:'The things you are sitting with. Say them here.' },
+      { id:'lo4', q:'Any ideas for specific pieces of content — a video, a post, a series — that popped into your head?', hint:'Even half an idea. Capture it now, develop it later.' },
+      { id:'lo5', q:'Anything else at all. This is your overflow bucket.', hint:'Nothing is too small, too random, or too unfinished for this space.' }
+    ]
+  },
+  {
+    id: 'vision', name: 'The Vision', emoji: '🔭',
+    desc: 'What this looks like when it works — the feeling, the life, the legacy',
+    questions: [
+      { id:'vi1', q:'Describe your life in twelve months if this works exactly as you want it to. Be as visual and specific as possible.', hint:'The estate renovated, the brand deals coming in, the cats in the garden, the travel — all of it.' },
+      { id:'vi2', q:'What does fifty thousand dollars a month actually change about your daily life and what you are able to do?', hint:'The renovation funded, the travel, the TNR work running, the estate maintained — make it concrete.' },
+      { id:'vi3', q:'What does this platform mean to you beyond money — the legacy, the impact, the story you are telling the world?', hint:'The deepest why. Not the income — the meaning.' },
+      { id:'vi4', q:'The phrase "how I built the life I always wanted" came up as a possible content anchor. What does that life actually look like to you — describe it fully.', hint:'This is not locked in as your brand — just explore it freely here. What is the life you always wanted?' },
+      { id:'vi5', q:'What do you want people who follow you for years to say about what you gave them?', hint:'The impact at scale. The reason the platform was worth building.' },
+      { id:'vi6', q:'Is there anything else — any world, any fear, any dream, any detail — that has not come up yet that you want captured in this brief?', hint:'Last call. Say everything.' }
+    ]
+  }
+];
+
+const ALL_QUESTIONS = [];
+WORLDS.forEach(w => w.questions.forEach(q => ALL_QUESTIONS.push({...q, worldId:w.id, worldName:w.name, worldEmoji:w.emoji})));
+
+const CODE_WORD = 'compass';
+const STORAGE_KEY = 'masterbrief_v4';
+const PIN_KEY = 'masterbrief_pin';
+const IDLE_MS = 5 * 60 * 1000;
+
+let answers = {};
+let currentQ = 0;
+let isRecording = false;
+let recognition = null;
+let synth = window.speechSynthesis;
+let idleTimer = null;
+let pinBuffer = '';
+let pinMode = 'unlock';
+let pinConfirmTemp = '';
+
+// Read queue state
+let readQueue = [];
+let readIndex = 0;
+let isReadingQueue = false;
+
+// ════════════════════════════════════════════════════════════
+// STORAGE
+// ════════════════════════════════════════════════════════════
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, btoa(unescape(encodeURIComponent(JSON.stringify({answers, currentQ}))))); } catch(e){}
+}
+function loadData() {
+  try {
+    const enc = localStorage.getItem(STORAGE_KEY);
+    if (!enc) return;
+    const obj = JSON.parse(decodeURIComponent(escape(atob(enc))));
+    answers = obj.answers || {};
+    currentQ = Math.min(obj.currentQ || 0, ALL_QUESTIONS.length - 1);
+  } catch(e) { answers = {}; currentQ = 0; }
+}
+function getPin() { return localStorage.getItem(PIN_KEY) || null; }
+function setPin(p) { localStorage.setItem(PIN_KEY, p); }
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  loadData();
+  const pin = getPin();
+  if (!pin) {
+    pinMode = 'setup';
+    document.getElementById('pinTitle').textContent = 'Create Your PIN';
+    document.getElementById('pinSub').textContent = 'Choose 4 digits to protect your brief';
+    document.getElementById('pinNote').textContent = 'This brief is private. Your PIN locks everything. Pick something easy to say aloud when you are alone.';
+  } else {
+    const count = Object.keys(answers).filter(k=>answers[k]).length;
+    document.getElementById('pinSub').textContent = count > 0 ? `${count} answers saved. Enter PIN to continue.` : 'Your empire awaits.';
+  }
+  resetIdleTimer();
+  document.addEventListener('click', resetIdleTimer);
+  document.addEventListener('touchstart', resetIdleTimer);
+});
+
+// ════════════════════════════════════════════════════════════
+// PIN
+// ════════════════════════════════════════════════════════════
+function pinTap(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d; updatePinDots();
+  if (pinBuffer.length === 4) setTimeout(checkPin, 130);
+}
+function pinDel() { pinBuffer = pinBuffer.slice(0,-1); updatePinDots(); }
+function pinClear() { pinBuffer = ''; updatePinDots(); }
+function updatePinDots() {
+  for(let i=0;i<4;i++) { const d=document.getElementById('d'+i); d.classList.toggle('filled',i<pinBuffer.length); d.classList.remove('error'); }
+}
+function pinError() {
+  for(let i=0;i<4;i++) document.getElementById('d'+i).classList.add('error');
+  setTimeout(()=>{ pinBuffer=''; updatePinDots(); }, 700);
+}
+function checkPin() {
+  if (pinMode==='setup') {
+    pinConfirmTemp=pinBuffer; pinBuffer=''; pinMode='confirm';
+    document.getElementById('pinTitle').textContent='Confirm PIN';
+    document.getElementById('pinSub').textContent='Say or tap it once more to confirm';
+    updatePinDots();
+  } else if (pinMode==='confirm') {
+    if (pinBuffer===pinConfirmTemp) { setPin(pinBuffer); pinBuffer=''; pinMode='unlock'; unlockApp(); }
+    else { pinError(); document.getElementById('pinSub').textContent="PINs didn't match — try again"; setTimeout(()=>{ pinMode='setup'; pinConfirmTemp=''; document.getElementById('pinTitle').textContent='Create Your PIN'; document.getElementById('pinSub').textContent='Choose 4 digits'; },900); }
+  } else {
+    if (pinBuffer===getPin()) unlockApp();
+    else { pinError(); document.getElementById('pinSub').textContent='Incorrect PIN'; pinBuffer=''; }
+  }
+}
+function pinVoice() {
+  if (!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)) { showToast('Voice not supported — tap instead','error'); return; }
+  const btn=document.getElementById('pinVoiceBtn');
+  btn.classList.add('listening'); btn.textContent='Listening...';
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const r=new SR(); r.lang='en-US'; r.interimResults=false;
+  r.onresult=(e)=>{
+    const t=e.results[0][0].transcript.toLowerCase();
+    const wm={one:'1',two:'2',three:'3',four:'4',five:'5',six:'6',seven:'7',eight:'8',nine:'9',zero:'0','to':'2','for':'4','too':'2','tree':'3','won':'1'};
+    let digits='';
+    t.split(/\s+/).forEach(w=>{ if(wm[w]) digits+=wm[w]; else if(/^\d$/.test(w)) digits+=w; });
+    if(!digits) digits=t.replace(/\D/g,'');
+    pinBuffer=digits.slice(0,4); updatePinDots();
+    btn.classList.remove('listening');
+    btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm6 9a1 1 0 0 1 1 1 7 7 0 0 1-6 6.92V20h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-2.08A7 7 0 0 1 5 11a1 1 0 0 1 2 0 5 5 0 0 0 10 0 1 1 0 0 1 1-1z"/></svg> Say your PIN aloud';
+    if(pinBuffer.length===4) setTimeout(checkPin,200);
+  };
+  r.onerror=()=>{ btn.classList.remove('listening'); btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm6 9a1 1 0 0 1 1 1 7 7 0 0 1-6 6.92V20h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-2.08A7 7 0 0 1 5 11a1 1 0 0 1 2 0 5 5 0 0 0 10 0 1 1 0 0 1 1-1z"/></svg> Say your PIN aloud'; showToast('Could not hear — tap instead','error'); };
+  r.start();
+}
+
+// ════════════════════════════════════════════════════════════
+// UNLOCK / LOCK
+// ════════════════════════════════════════════════════════════
+function unlockApp() {
+  showScreen('main-screen'); renderQuestion();
+  const count=Object.keys(answers).filter(k=>answers[k]).length;
+  const q=ALL_QUESTIONS[currentQ];
+  const welcome = count>0 ? `Welcome back. ${count} of ${ALL_QUESTIONS.length} answers saved.` : `Welcome to Master Brief. ${WORLDS.length} worlds, ${ALL_QUESTIONS.length} questions. Let's build your empire.`;
+  const qMsg = q ? ` Question ${currentQ+1}: ${q.q}. Tap the microphone when ready.` : '';
+  setTimeout(()=>speak(welcome+qMsg), 500);
+  resetIdleTimer();
+}
+function lockApp() {
+  stopRecording(); stopSpeaking(); isReadingQueue=false;
+  pinBuffer=''; updatePinDots(); pinMode='unlock';
+  document.getElementById('pinTitle').textContent='Welcome Back';
+  const count=Object.keys(answers).filter(k=>answers[k]).length;
+  document.getElementById('pinSub').textContent = count>0 ? `${count} answers saved. Enter PIN to continue.` : 'Enter your PIN to continue';
+  showScreen('pin-screen');
+}
+
+// ════════════════════════════════════════════════════════════
+// SCREENS
+// ════════════════════════════════════════════════════════════
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function showMain() { showScreen('main-screen'); renderQuestion(); }
+function reviewBack() { isReadingQueue=false; stopSpeaking(); updateReadUI(); showMain(); }
+
+// ════════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════════
+function renderQuestion() {
+  const q=ALL_QUESTIONS[currentQ];
+  if(!q) return;
+  const world=WORLDS.find(w=>w.id===q.worldId);
+  document.getElementById('topbarWorld').textContent = world ? world.emoji+' '+world.name : '';
+  document.getElementById('qNumber').textContent = `Question ${currentQ+1} of ${ALL_QUESTIONS.length}`;
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('qHint').textContent = q.hint||'';
+  const ans=answers[q.id]||'';
+  const box=document.getElementById('qAnswerBox');
+  box.textContent = ans||'No answer yet — tap the mic to speak.';
+  box.classList.toggle('filled',!!ans);
+  document.getElementById('qStatus').innerHTML = ans ? '<div class="q-status-dot"></div> Saved' : '';
+  document.getElementById('interimArea').textContent='';
+  const filled=Object.keys(answers).filter(k=>answers[k]).length;
+  document.getElementById('progressFill').style.width = Math.round((filled/ALL_QUESTIONS.length)*100)+'%';
+  document.getElementById('topbarProgress').textContent = `${filled} / ${ALL_QUESTIONS.length}`;
+}
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════
+function prevQuestion() {
+  stopRecording();
+  if (currentQ>0) { currentQ--; saveData(); renderQuestion(); const q=ALL_QUESTIONS[currentQ]; speak(`Question ${currentQ+1}: ${q.q}.`+(answers[q.id]?' Answer saved.':' No answer yet.')); }
+  else speak('You are on the first question.');
+}
+function skipQuestion() {
+  stopRecording();
+  if (currentQ<ALL_QUESTIONS.length-1) { currentQ++; saveData(); renderQuestion(); const q=ALL_QUESTIONS[currentQ]; speak(`Question ${currentQ+1}: ${q.q}.`+(answers[q.id]?' You have an answer here already.':'')); }
+  else speak('You have reached the last question. Tap Generate to compile your brief.');
+}
+function repeatQuestion() {
+  stopRecording();
+  const q=ALL_QUESTIONS[currentQ];
+  speak(`Question ${currentQ+1} of ${ALL_QUESTIONS.length}: ${q.q}. Hint: ${q.hint}`);
+}
+function jumpToWorld(worldId) {
+  stopRecording();
+  const idx=ALL_QUESTIONS.findIndex(q=>q.worldId===worldId);
+  if (idx>=0) { currentQ=idx; saveData(); showMain(); renderQuestion(); const q=ALL_QUESTIONS[idx]; speak(`Question ${idx+1}: ${q.q}`); }
+}
+
+// ════════════════════════════════════════════════════════════
+// IDLE
+// ════════════════════════════════════════════════════════════
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  idleTimer=setTimeout(()=>{ if(!document.getElementById('pin-screen').classList.contains('active')) lockApp(); }, IDLE_MS);
+}
+
+// ════════════════════════════════════════════════════════════
+// SPEECH SYNTHESIS
+// ════════════════════════════════════════════════════════════
+function speak(text, onEnd) {
+  if (!synth) return;
+  synth.cancel();
+  const utt=new SpeechSynthesisUtterance(text);
+  utt.rate=0.92; utt.pitch=1; utt.volume=1;
+  utt.onend=()=>{ if(onEnd) onEnd(); };
+  utt.onerror=()=>{ if(onEnd) onEnd(); };
+  synth.speak(utt);
+}
+function stopSpeaking() { if(synth) synth.cancel(); }
+
+// ════════════════════════════════════════════════════════════
+// RESUMABLE READ QUEUE
+// ════════════════════════════════════════════════════════════
+function buildQueue(onlyUnanswered) {
+  readQueue=[];
+  ALL_QUESTIONS.forEach((q,i)=>{
+    const ans=answers[q.id]||'';
+    if (onlyUnanswered && ans) return;
+    if (!onlyUnanswered && !ans) return;
+    readQueue.push({globalIndex:i, qId:q.id, qText:q.q, answer:ans});
+  });
+}
+function startQueue(from) {
+  if (readQueue.length===0) { speak('Nothing to read. Start answering questions first.'); return; }
+  readIndex=from||0; isReadingQueue=true; updateReadUI(); readNext();
+}
+function readNext() {
+  if (!isReadingQueue||readIndex>=readQueue.length) {
+    isReadingQueue=false; updateReadUI();
+    speak('Done reading. Tap Back to continue recording.');
+    return;
+  }
+  const item=readQueue[readIndex];
+  // Highlight current item
+  document.querySelectorAll('.review-item').forEach(el=>el.classList.remove('reading-now'));
+  const el=document.getElementById('ri-'+item.qId);
+  if (el) { el.classList.add('reading-now'); el.scrollIntoView({behavior:'smooth',block:'center'}); }
+  updateReadUI();
+  const text = item.answer
+    ? `Question ${item.globalIndex+1}: ${item.qText}. Your answer: ${item.answer}.`
+    : `Question ${item.globalIndex+1}: ${item.qText}. Not answered yet.`;
+  speak(text, ()=>{ if(isReadingQueue){ readIndex++; setTimeout(readNext,350); } });
+}
+function pauseReading() { isReadingQueue=false; stopSpeaking(); updateReadUI(); showToast('Paused — tap Resume to continue','info'); }
+function resumeReading() {
+  if (readQueue.length===0) return;
+  isReadingQueue=true; updateReadUI(); readNext();
+}
+function updateReadUI() {
+  const readBtn=document.getElementById('readAloudBtn');
+  const pauseBtn=document.getElementById('pauseReadBtn');
+  const resumeBtn=document.getElementById('resumeReadBtn');
+  const indicator=document.getElementById('readingIndicator');
+  if (!readBtn) return;
+  if (isReadingQueue) {
+    readBtn.style.display='none'; pauseBtn.style.display=''; resumeBtn.style.display='none';
+    indicator.classList.add('show');
+  } else if (readIndex>0 && readIndex<readQueue.length) {
+    readBtn.style.display=''; pauseBtn.style.display='none'; resumeBtn.style.display='';
+    indicator.classList.remove('show');
+  } else {
+    readBtn.style.display=''; pauseBtn.style.display='none'; resumeBtn.style.display='none';
+    indicator.classList.remove('show');
+  }
+}
+function speakReview() {
+  stopSpeaking(); isReadingQueue=false;
+  buildQueue(false);
+  if (readQueue.length===0) { speak('No answered questions yet. Start recording and come back.'); return; }
+  readIndex=0;
+  speak(`Reading ${readQueue.length} answered questions. Tap Pause at any time.`, ()=>setTimeout(()=>startQueue(0),300));
+}
+function speakUnanswered() {
+  stopSpeaking(); isReadingQueue=false;
+  readQueue=[];
+  ALL_QUESTIONS.forEach((q,i)=>{ if(!answers[q.id]) readQueue.push({globalIndex:i,qId:q.id,qText:q.q,answer:''}); });
+  if (readQueue.length===0) { speak('You have answered every question. Time to generate your brief.'); return; }
+  readIndex=0;
+  speak(`${readQueue.length} unanswered questions. Reading now. Tap Pause to stop.`, ()=>setTimeout(()=>startQueue(0),300));
+}
+function speakWorldSummary() {
+  stopSpeaking();
+  let text='Here is your progress across all worlds. ';
+  WORLDS.forEach(w=>{ const done=w.questions.filter(q=>answers[q.id]).length; text+=`${w.name}: ${done} of ${w.questions.length}. `; });
+  text+=`Tap any world to jump to its questions.`;
+  speak(text);
+}
+
+// ════════════════════════════════════════════════════════════
+// CHIME
+// ════════════════════════════════════════════════════════════
+function playChime() {
+  try {
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [[523,0],[659,0.13],[784,0.26]].forEach(([freq,delay])=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value=freq; o.type='sine';
+      const t=ctx.currentTime+delay;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.15,t+0.04); g.gain.exponentialRampToValueAtTime(0.001,t+0.45);
+      o.start(t); o.stop(t+0.45);
+    });
+  } catch(e){}
+}
+
+// ════════════════════════════════════════════════════════════
+// RECORDING
+// ════════════════════════════════════════════════════════════
+function toggleRecord() { if(isRecording) stopRecording(); else requestMicThenRecord(); }
+
+function requestMicThenRecord() {
+  if (!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)) {
+    showToast('Open in Safari to use voice','error');
+    speak('Voice recording requires Safari. Please open this file in Safari on your iPhone.');
+    return;
+  }
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    const micStatus = document.getElementById('micStatus');
+    if (micStatus) micStatus.textContent = 'Requesting mic access...';
+    navigator.mediaDevices.getUserMedia({audio:true})
+      .then(stream => {
+        stream.getTracks().forEach(t=>t.stop());
+        if (micStatus) micStatus.textContent = '';
+        startRecording();
+      })
+      .catch(err => {
+        if (micStatus) micStatus.textContent = 'Mic blocked — check Settings';
+        showToast('Mic blocked — go to Settings > Safari > Microphone','error');
+        speak('Microphone access was blocked. Go to Settings, then Safari, then Microphone, and turn it on. Then try again.');
+      });
+  } else {
+    startRecording();
+  }
+}
+
+function startRecording() {
+  stopSpeaking(); isReadingQueue=false;
+  isRecording=true;
+  const ring=document.getElementById('micRing'), label=document.getElementById('micLabel'), box=document.getElementById('qAnswerBox');
+  ring.classList.add('recording'); label.textContent='Listening... tap to stop'; label.className='mic-label recording'; box.classList.add('recording-live');
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR(); recognition.continuous=true; recognition.interimResults=true; recognition.lang='en-US';
+  const q=ALL_QUESTIONS[currentQ], existing=answers[q.id]||'';
+  let finalBuffer='', codeWordUsed=false;
+  recognition.onresult=(e)=>{
+    let interim='', newFinal='';
+    for(let i=e.resultIndex;i<e.results.length;i++) { const t=e.results[i][0].transcript; if(e.results[i].isFinal) newFinal+=t+' '; else interim+=t; }
+    if(newFinal) { if(newFinal.toLowerCase().includes(CODE_WORD)) codeWordUsed=true; finalBuffer+=newFinal.replace(new RegExp(CODE_WORD+'[,.]?\\s*','gi'),''); }
+    document.getElementById('interimArea').textContent=interim?'...'+interim:'';
+    const combined=existing?existing.trimEnd()+'\n\n'+finalBuffer.trim():finalBuffer.trim();
+    if(combined.trim()) { box.textContent=combined; box.classList.add('filled'); }
+  };
+  recognition.onerror=(e)=>{
+    const msgs={'not-allowed':'Mic blocked. Settings > Safari > Microphone > Allow.','network':'Network error — check connection.','audio-capture':'No microphone found.','service-not-allowed':'Open in Safari to use voice.'};
+    const msg=msgs[e.error];
+    if(msg){ showToast(msg,'error'); speak(msg); stopRecording(); }
+    else if(e.error!=='no-speech'&&e.error!=='aborted'){ showToast('Mic error: '+e.error,'error'); stopRecording(); }
+  };
+  recognition.onend=()=>{ if(isRecording) stopRecording(); };
+  try {
+    recognition.start();
+  } catch(err) {
+    showToast('Could not start — open in Safari','error');
+    isRecording=false;
+    ring.classList.remove('recording'); label.textContent='Tap to answer'; label.className='mic-label'; box.classList.remove('recording-live');
+  }
+  recognition._get=()=>{ const c=existing?existing.trimEnd()+'\n\n'+finalBuffer.trim():finalBuffer.trim(); return {answer:c.trim(),codeWord:codeWordUsed}; };
+}
+function stopRecording() {
+  if(!isRecording) return;
+  isRecording=false;
+  const ring=document.getElementById('micRing'), label=document.getElementById('micLabel'), box=document.getElementById('qAnswerBox');
+  ring.classList.remove('recording'); label.textContent='Tap to answer'; label.className='mic-label'; box.classList.remove('recording-live');
+  document.getElementById('interimArea').textContent='';
+  if(recognition) {
+    const get=recognition._get;
+    try{recognition.stop();}catch(e){}
+    recognition=null;
+    if(get) {
+      const {answer,codeWord}=get();
+      if(answer) {
+        const q=ALL_QUESTIONS[currentQ];
+        answers[q.id]=answer; saveData(); renderQuestion(); playChime();
+        ring.classList.add('thinking'); label.textContent='Saving...'; label.className='mic-label thinking';
+        setTimeout(()=>{ ring.classList.remove('thinking'); label.textContent='Tap to answer'; label.className='mic-label'; speak('Saved.'+(codeWord?' Marked as quick capture.':'')+' Ready for the next question?'); },700);
+      } else { showToast('Nothing captured — try again','error'); }
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// WORLD MAP
+// ════════════════════════════════════════════════════════════
+function showWorldMap() {
+  stopRecording();
+  const body=document.getElementById('wmBody');
+  body.innerHTML=WORLDS.map(w=>{
+    const done=w.questions.filter(q=>answers[q.id]).length;
+    const pct=Math.round((done/w.questions.length)*100);
+    const isCurrent=ALL_QUESTIONS[currentQ].worldId===w.id;
+    const isComplete=done===w.questions.length;
+    return `<div class="world-card ${isCurrent?'current':''} ${isComplete?'complete':''}" onclick="jumpToWorld('${w.id}')">
+      <div class="world-emoji">${w.emoji}</div>
+      <div class="world-info">
+        <div class="world-name">${w.name}</div>
+        <div class="world-desc">${w.desc}</div>
+        <div class="world-count">${done} / ${w.questions.length} answered${isComplete?' ✓':''}</div>
+      </div>
+      <div class="world-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+  showScreen('worldmap-screen');
+  const total=Object.keys(answers).filter(k=>answers[k]).length;
+  speak(`${total} of ${ALL_QUESTIONS.length} answers saved. Tap any world to jump to its questions.`);
+}
+
+// ════════════════════════════════════════════════════════════
+// REVIEW
+// ════════════════════════════════════════════════════════════
+function showReview() {
+  stopRecording();
+  const body=document.getElementById('reviewBody');
+  let html='';
+  WORLDS.forEach(w=>{
+    html+=`<div class="review-world-label">${w.emoji} ${w.name}</div>`;
+    w.questions.forEach(q=>{
+      const idx=ALL_QUESTIONS.findIndex(aq=>aq.id===q.id);
+      const ans=answers[q.id]||'';
+      html+=`<div class="review-item" id="ri-${q.id}">
+        <div class="review-q">${idx+1}. ${q.q}</div>
+        ${ans?`<div class="review-a">${ans.replace(/\n/g,'<br>')}</div>`:'<div class="review-empty">Not answered yet</div>'}
+      </div>`;
+    });
+  });
+  body.innerHTML=html;
+  isReadingQueue=false; readQueue=[]; readIndex=0; updateReadUI();
+  showScreen('review-screen');
+}
+
+// ════════════════════════════════════════════════════════════
+// GENERATE
+// ════════════════════════════════════════════════════════════
+function generateBrief() {
+  stopRecording(); stopSpeaking(); isReadingQueue=false;
+  const answered=Object.keys(answers).filter(k=>answers[k]).length;
+  if(answered===0){ showToast('Answer at least one question first','error'); return; }
+  const now=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  let brief=`MASTER LIFE BRIEF — MULTI-WORLD MEDIA & INFLUENCER EMPIRE\n`;
+  brief+=`Generated: ${now}\n${'═'.repeat(65)}\n\n`;
+  brief+=`INSTRUCTIONS FOR CLAUDE:\n`;
+  brief+=`This is a comprehensive life brief for someone building a multi-world media and influencer platform. The financial goal is $50,000 per month within year one, driven primarily by brand deals across lifestyle, cat, garden, estate, and travel content. Revenue funds ongoing operations, estate renovation, travel, and a Trap-Spay-Neuter-Release program for cats — no donations asked for, ever.\n\n`;
+  brief+=`The subject is building this platform largely solo using agentic AI tools. There is a possible content angle around documenting that process — treat it as an option to explore, not a locked direction.\n\n`;
+  brief+=`Build a complete media empire business plan including:\n`;
+  brief+=`1. Core brand identity and positioning — the thread connecting all worlds\n`;
+  brief+=`2. The anchor world to lead with for initial audience building\n`;
+  brief+=`3. Platform strategy — which platforms, which formats, in what order\n`;
+  brief+=`4. Content pillars and formats per world\n`;
+  brief+=`5. Camera-optional production approach (subject not naturally comfortable on camera)\n`;
+  brief+=`6. Monetization roadmap to $50k/month — brand deals, renovation sponsorships, secondary streams\n`;
+  brief+=`7. Renovation-as-sponsorship model — how brands fund the estate renovation through content\n`;
+  brief+=`8. 90-day launch plan\n`;
+  brief+=`9. AI-powered solo operation model\n`;
+  brief+=`10. Analysis of reference creators mentioned and what to take and leave\n`;
+  brief+=`11. The legacy narrative — immigrant to estate owner arc\n`;
+  brief+=`12. Long-term vision at 1M followers\n\n`;
+  brief+=`${'═'.repeat(65)}\n\n`;
+  brief+=`WORLDS OVERVIEW\n${'─'.repeat(40)}\n`;
+  WORLDS.forEach(w=>{ const done=w.questions.filter(q=>answers[q.id]).length; brief+=`${w.emoji} ${w.name}: ${done}/${w.questions.length} questions answered\n`; });
+  brief+=`\nTotal: ${answered} of ${ALL_QUESTIONS.length} questions answered\n\n`;
+  WORLDS.forEach(w=>{
+    const worldAnswers=w.questions.filter(q=>answers[q.id]);
+    if(worldAnswers.length===0) return;
+    brief+=`${'═'.repeat(65)}\n`;
+    brief+=`WORLD: ${w.name.toUpperCase()} ${w.emoji}\n${'─'.repeat(40)}\n\n`;
+    worldAnswers.forEach(q=>{ brief+=`Q: ${q.q}\nA: ${answers[q.id]}\n\n`; });
+  });
+  brief+=`${'═'.repeat(65)}\n`;
+  brief+=`END OF MASTER BRIEF — ${answered} of ${ALL_QUESTIONS.length} questions answered across ${WORLDS.filter(w=>w.questions.some(q=>answers[q.id])).length} worlds.\n`;
+
+  navigator.clipboard.writeText(brief).then(()=>{
+    showToast('Brief copied to clipboard!','gold');
+    speak(`Your Master Brief is ready. ${answered} answers compiled. Copied to clipboard. Open a new Claude conversation, paste it in, and say: Analyze this and build my media empire business plan.`);
+  }).catch(()=>{
+    const ta=document.createElement('textarea'); ta.value=brief; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); showToast('Brief copied!','gold'); }catch(e){ showToast('Open on desktop to copy','error'); }
+    document.body.removeChild(ta);
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════════════════
+function showToast(msg,type='') {
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.className='toast show'+(type?' '+type:'');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>
