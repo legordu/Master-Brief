@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -237,21 +237,43 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div class="q-number" id="qNumber"></div>
     <div class="q-text" id="qText">Loading...</div>
     <div class="q-hint" id="qHint"></div>
-    <div class="q-answer-box" id="qAnswerBox">No answer yet — tap the mic to speak.</div>
+    <!-- VOICE MODE -->
+    <div id="voiceAnswerWrap" style="width:100%;max-width:580px">
+      <div class="q-answer-box" id="qAnswerBox">No answer yet — tap the mic to speak.</div>
+    </div>
+    <!-- TYPE MODE -->
+    <div id="typeAnswerWrap" style="display:none;width:100%;max-width:580px">
+      <textarea id="typeArea"
+        style="width:100%;min-height:130px;background:#0e1a0e;border:1px solid #2a4a2a;border-radius:14px;padding:13px 16px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.65;resize:vertical;outline:none;"
+        placeholder="Type your answer here..."
+        oninput="onTypeInput()"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end">
+        <button onclick="saveTyped()" style="background:var(--success);border:none;border-radius:20px;padding:7px 18px;color:white;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;">Save</button>
+        <button id="clearBtn2" onclick="clearAnswer()" style="display:none;background:transparent;border:1px solid var(--rec);border-radius:20px;padding:7px 16px;color:var(--rec);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;">✕ Clear</button>
+      </div>
+    </div>
     <div class="interim-area" id="interimArea"></div>
     <div class="q-status" id="qStatus"></div>
     <button id="clearBtn" onclick="clearAnswer()" style="display:none;margin-top:8px;background:transparent;border:1px solid var(--rec);border-radius:20px;padding:6px 16px;color:var(--rec);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;">✕ Clear Answer</button>
   </div>
   <div class="mic-area">
-    <button class="read-q-btn" onclick="repeatQuestion()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-      Read Question Aloud
-    </button>
-    <div class="mic-ring" id="micRing" onclick="toggleRecord()">
-      <svg width="38" height="38" viewBox="0 0 24 24" fill="white"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm6 9a1 1 0 0 1 1 1 7 7 0 0 1-6 6.92V20h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-2.08A7 7 0 0 1 5 11a1 1 0 0 1 2 0 5 5 0 0 0 10 0 1 1 0 0 1 1-1z"/></svg>
+    <!-- TOP ROW: Read + Pause + Mode Toggle -->
+    <div style="display:flex;gap:8px;width:100%;max-width:380px">
+      <button class="read-q-btn" onclick="repeatQuestion()" style="flex:1;max-width:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+        Read Aloud
+      </button>
+      <button id="pauseSpeakBtn" onclick="stopSpeaking()" style="display:none;flex-shrink:0;background:var(--rec);border:none;border-radius:28px;padding:12px 16px;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;-webkit-tap-highlight-color:transparent;">⏸</button>
+      <button id="modeToggleBtn" onclick="toggleInputMode()" style="flex-shrink:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:28px;padding:12px 16px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:16px;cursor:pointer;-webkit-tap-highlight-color:transparent;">⌨️</button>
     </div>
-    <div class="mic-label" id="micLabel">Tap to answer</div>
-    <div id="micStatus" style="font-size:11px;color:var(--muted);text-align:center;min-height:14px;margin-top:-4px"></div>
+    <!-- MIC WRAP (voice mode) -->
+    <div id="micWrap" style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div class="mic-ring" id="micRing" onclick="toggleRecord()">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="white"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm6 9a1 1 0 0 1 1 1 7 7 0 0 1-6 6.92V20h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-2.08A7 7 0 0 1 5 11a1 1 0 0 1 2 0 5 5 0 0 0 10 0 1 1 0 0 1 1-1z"/></svg>
+      </div>
+      <div class="mic-label" id="micLabel">Tap to answer</div>
+      <div id="micStatus" style="font-size:11px;color:var(--muted);text-align:center;min-height:14px;"></div>
+    </div>
     <div class="nav-row">
       <button class="nav-btn sm" onclick="prevQuestion()">← Back</button>
       <button class="nav-btn sm" onclick="repeatQuestion()">Repeat ↺</button>
@@ -456,6 +478,9 @@ let readQueue = [];
 let readIndex = 0;
 let isReadingQueue = false;
 
+// Typing mode state
+let isTypingMode = false;
+
 // ════════════════════════════════════════════════════════════
 // STORAGE
 // ════════════════════════════════════════════════════════════
@@ -592,6 +617,13 @@ function renderQuestion() {
   document.getElementById('qStatus').innerHTML = ans ? '<div class="q-status-dot"></div> Saved' : '';
   const clearBtn = document.getElementById('clearBtn');
   if (clearBtn) clearBtn.style.display = ans ? 'block' : 'none';
+  // Update type area if in typing mode
+  if (isTypingMode) {
+    const typeArea = document.getElementById('typeArea');
+    if (typeArea) typeArea.value = ans;
+    const clearBtn2 = document.getElementById('clearBtn2');
+    if (clearBtn2) clearBtn2.style.display = ans ? 'block' : 'none';
+  }
   document.getElementById('interimArea').textContent='';
   const filled=Object.keys(answers).filter(k=>answers[k]).length;
   document.getElementById('progressFill').style.width = Math.round((filled/ALL_QUESTIONS.length)*100)+'%';
@@ -638,11 +670,16 @@ function speak(text, onEnd) {
   synth.cancel();
   const utt=new SpeechSynthesisUtterance(text);
   utt.rate=0.92; utt.pitch=1; utt.volume=1;
-  utt.onend=()=>{ if(onEnd) onEnd(); };
-  utt.onerror=()=>{ if(onEnd) onEnd(); };
+  showPauseBtn(true);
+  utt.onend=()=>{ showPauseBtn(false); if(onEnd) onEnd(); };
+  utt.onerror=()=>{ showPauseBtn(false); if(onEnd) onEnd(); };
   synth.speak(utt);
 }
-function stopSpeaking() { if(synth) synth.cancel(); }
+function stopSpeaking() { if(synth) synth.cancel(); showPauseBtn(false); }
+function showPauseBtn(show) {
+  const btn = document.getElementById('pauseSpeakBtn');
+  if (btn) btn.style.display = show ? 'block' : 'none';
+}
 
 // ════════════════════════════════════════════════════════════
 // RESUMABLE READ QUEUE
@@ -824,15 +861,76 @@ function stopRecording() {
   }
 }
 
+function toggleInputMode() {
+  isTypingMode = !isTypingMode;
+  stopRecording();
+  applyInputMode();
+}
+
+function applyInputMode() {
+  const voiceWrap = document.getElementById('voiceAnswerWrap');
+  const typeWrap = document.getElementById('typeAnswerWrap');
+  const micWrap = document.getElementById('micWrap');
+  const modeBtn = document.getElementById('modeToggleBtn');
+  const typeArea = document.getElementById('typeArea');
+  if (isTypingMode) {
+    voiceWrap.style.display = 'none';
+    typeWrap.style.display = 'block';
+    micWrap.style.display = 'none';
+    modeBtn.textContent = '🎤';
+    modeBtn.style.borderColor = 'var(--accent)';
+    modeBtn.style.color = 'var(--accent2)';
+    // Load existing answer into textarea
+    const q = ALL_QUESTIONS[currentQ];
+    const ans = answers[q.id] || '';
+    typeArea.value = ans;
+    const clearBtn2 = document.getElementById('clearBtn2');
+    if (clearBtn2) clearBtn2.style.display = ans ? 'block' : 'none';
+    setTimeout(() => typeArea.focus(), 100);
+  } else {
+    voiceWrap.style.display = 'block';
+    typeWrap.style.display = 'none';
+    micWrap.style.display = 'flex';
+    micWrap.style.flexDirection = 'column';
+    micWrap.style.alignItems = 'center';
+    modeBtn.textContent = '⌨️';
+    modeBtn.style.borderColor = 'var(--border)';
+    modeBtn.style.color = 'var(--muted)';
+  }
+}
+
+function onTypeInput() {
+  // Live feedback as user types
+}
+
+function saveTyped() {
+  const q = ALL_QUESTIONS[currentQ];
+  const typeArea = document.getElementById('typeArea');
+  const val = typeArea.value.trim();
+  if (val) {
+    answers[q.id] = val;
+    saveData();
+    renderQuestion();
+    playChime();
+    speak('Saved.');
+    const clearBtn2 = document.getElementById('clearBtn2');
+    if (clearBtn2) clearBtn2.style.display = 'block';
+  } else {
+    showToast('Nothing to save', 'error');
+  }
+}
+
 function clearAnswer() {
   const q = ALL_QUESTIONS[currentQ];
   if (!q) return;
-  if (answers[q.id]) {
-    delete answers[q.id];
-    saveData();
-    renderQuestion();
-    speak('Answer cleared.');
-  }
+  delete answers[q.id];
+  saveData();
+  renderQuestion();
+  const typeArea = document.getElementById('typeArea');
+  if (typeArea) typeArea.value = '';
+  const clearBtn2 = document.getElementById('clearBtn2');
+  if (clearBtn2) clearBtn2.style.display = 'none';
+  speak('Answer cleared.');
 }
 
 // ════════════════════════════════════════════════════════════
