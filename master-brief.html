@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -240,6 +240,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div class="q-answer-box" id="qAnswerBox">No answer yet — tap the mic to speak.</div>
     <div class="interim-area" id="interimArea"></div>
     <div class="q-status" id="qStatus"></div>
+    <button id="clearBtn" onclick="clearAnswer()" style="display:none;margin-top:8px;background:transparent;border:1px solid var(--rec);border-radius:20px;padding:6px 16px;color:var(--rec);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;">✕ Clear Answer</button>
   </div>
   <div class="mic-area">
     <button class="read-q-btn" onclick="repeatQuestion()">
@@ -589,6 +590,8 @@ function renderQuestion() {
   box.textContent = ans||'No answer yet — tap the mic to speak.';
   box.classList.toggle('filled',!!ans);
   document.getElementById('qStatus').innerHTML = ans ? '<div class="q-status-dot"></div> Saved' : '';
+  const clearBtn = document.getElementById('clearBtn');
+  if (clearBtn) clearBtn.style.display = ans ? 'block' : 'none';
   document.getElementById('interimArea').textContent='';
   const filled=Object.keys(answers).filter(k=>answers[k]).length;
   document.getElementById('progressFill').style.width = Math.round((filled/ALL_QUESTIONS.length)*100)+'%';
@@ -818,6 +821,17 @@ function stopRecording() {
         setTimeout(()=>{ ring.classList.remove('thinking'); label.textContent='Tap to answer'; label.className='mic-label'; speak('Saved.'+(codeWord?' Marked as quick capture.':'')+' Ready for the next question?'); },700);
       } else { showToast('Nothing captured — try again','error'); }
     }
+  }
+}
+
+function clearAnswer() {
+  const q = ALL_QUESTIONS[currentQ];
+  if (!q) return;
+  if (answers[q.id]) {
+    delete answers[q.id];
+    saveData();
+    renderQuestion();
+    speak('Answer cleared.');
   }
 }
 
